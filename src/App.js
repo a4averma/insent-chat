@@ -38,17 +38,22 @@ function App() {
         }
       });
       const channel = pusher.subscribe(data.subscriptionChannel);
+
       channel.bind("client-widget-message", (data) => {
         console.log(data);
       });
-      channel.trigger("client-widget-message", {
-        channel: data.channelId,
-        message: { lastMessageTimeStamp: lastMessageTimestamp },
-        senderId: data.user.id,
-      });
+
       channel.bind("server-message", (data) => {
         console.log(data);
       });
+
+      channel.bind("pusher:subscription_succeeded", () => {
+        channel.trigger("client-widget-message", {
+          channel: data.channelId,
+          message: { lastMessageTimeStamp: lastMessageTimestamp },
+          senderId: data.user.id,
+        })
+      })
     }
   }, [initiateSocketConnect]);
 
