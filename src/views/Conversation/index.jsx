@@ -3,19 +3,19 @@ import ConversationService from "./services";
 import Avatar from "../../components/Avatar";
 import { IoChevronBack } from "react-icons/all";
 import CloseButton from "../../components/CloseButton";
-import './styles.css';
+import "./styles.css";
 
 export default function Conversations({
   setInitiateSocketConnection,
   setLastMessageTimestamp,
   channelId,
   detail,
-  color
+  color,
+  setConversations,
+  conversations
 }) {
   const [isLoading, setIsLoading] = useState(false);
   const [isError, setIsError] = useState(false);
-  const [messages, setMessages] = useState([]);
-
   const [showAllConversations, setShowAllConversation] = useState(false);
 
   const fetchConversation = () => {
@@ -24,7 +24,7 @@ export default function Conversations({
     ConversationService.getChannel(channelId)
       .then((r) => {
         setIsLoading(false);
-        setMessages([...r.data.prevMessages, ...r.data.messages]);
+        setConversations([...r.data.prevMessages, ...r.data.messages]);
         setLastMessageTimestamp(r.data.messageTimestamp);
         setInitiateSocketConnection(true);
       })
@@ -66,8 +66,13 @@ export default function Conversations({
             We're here to help you accelerate your prospect's <br /> buying
             experience.
           </p>
-          <p className="text-white text-sm font-bold mt-4">Your conversations</p>
-          <div className="bg-white flex shadow-lg rounded-3xl space-x-2 p-4 cursor-pointer" onClick={() => setShowAllConversation(false)}>
+          <p className="text-white text-sm font-bold mt-4">
+            Your conversations
+          </p>
+          <div
+            className="bg-white flex shadow-lg rounded-3xl space-x-2 p-4 cursor-pointer"
+            onClick={() => setShowAllConversation(false)}
+          >
             <Avatar
               backgroundColor={color.headerBackgroundColor}
               src={detail.widgetIcon}
@@ -108,13 +113,19 @@ export default function Conversations({
           <CloseButton />
         </div>
         <div className="h-64">
-          <div className="px-4 font-bold">{isLoading ? "..." : ''}</div>
-          {messages.map((message) => (
+          <div className="px-4 font-bold">{isLoading ? "..." : ""}</div>
+          {conversations.map((message, index) => (
             <div
               className="rounded-t-3xl rounded-br-3xl rounded-bl-lg bg-gray-200 text-gray-600 m-4 w-6/12 px-4 py-4"
-              key={message.id}
+              key={message._id || message.id}
             >
-              {message.text.replace("<br />", "")}
+              {message.text ? (
+                message.text.replace("<br />", "")
+              ) : message.type === "input" ? (
+                <input type="text" placeholder={message.input[0].name} />
+              ) : (
+                message.type === "buttons" ? message.buttons.fields.map(button => <button>{button}</button>) : ''
+              )}
             </div>
           ))}
         </div>

@@ -12,6 +12,8 @@ function App() {
   const [initiateSocketConnect, setInitiateSocketConnection] = useState(false);
   const [lastMessageTimestamp, setLastMessageTimestamp] = useState(0);
 
+  const [conversations, setConversations] = useState([]);
+
   const { isLoading, isError, data } = useQuery(`fetch-user`, () => {
     let userId = localStorage.getItem("user-id");
     if (userId) {
@@ -32,28 +34,30 @@ function App() {
         authEndpoint: `${process.env.REACT_APP_API}pusher/presence/auth/visitor?userid=${data.user.id}`,
       });
       pusher.connection.bind("connected", () => {
-        ChatService.markAsDelivered(data.channelId, { userid: data.user.id });
-        if (showConversation) {
-          ChatService.markAsRead(data.channelId, { userid: data.user.id });
-        }
+        // ChatService.markAsDelivered(data.channelId, { userid: data.user.id });
+        // if (showConversation) {
+        //   ChatService.markAsRead(data.channelId, { userid: data.user.id });
+        // }
       });
       const channel = pusher.subscribe(data.subscriptionChannel);
+      channel.bind("pusher:subscription_succeeded", () => {
+        channel.trigger("client-widget-message", {
+          channelName: data.channelId,
+          message: { lastMessageTimeStamp: lastMessageTimestamp },
+          senderId: data.user.id,
+        })
+      })
+
+      channel.bind("server-message", (data) => {
+        setLastMessageTimestamp(data.lastMessageTimeStamp);
+        setConversations(prevState => [...prevState, ...data.messages])
+        console.log(data);
+      });
 
       channel.bind("client-widget-message", (data) => {
         console.log(data);
       });
 
-      channel.bind("server-message", (data) => {
-        console.log(data);
-      });
-
-      channel.bind("pusher:subscription_succeeded", () => {
-        channel.trigger("client-widget-message", {
-          channel: data.channelId,
-          message: { lastMessageTimeStamp: lastMessageTimestamp },
-          senderId: data.user.id,
-        })
-      })
     }
   }, [initiateSocketConnect]);
 
@@ -73,6 +77,8 @@ function App() {
         detail={data.settings.bot}
         color={data.settings.color}
         user={data.user.id}
+        conversations={conversations}
+        setConversations={setConversations}
       />
     );
   }
