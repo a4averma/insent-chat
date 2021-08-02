@@ -1,7 +1,7 @@
 import { useEffect, useState, forwardRef, useRef } from "react";
 import ConversationService from "./services";
 import Avatar from "../../components/Avatar";
-import {IoChevronBack, MdSend, RiRestartFill} from "react-icons/all";
+import { IoChevronBack, MdSend, RiRestartFill } from "react-icons/all";
 import CloseButton from "../../components/CloseButton";
 import "./styles.css";
 
@@ -111,6 +111,28 @@ function Conversations({
     });
   };
 
+  const handleButtonClick = (key, value) => {
+    channelRef.current.trigger("client-widget-message", {
+      channelName: channelId,
+      message: {
+        lastMessageTimeStamp:
+        conversations[conversations.length - 2].time,
+        [key]: value,
+      },
+      senderId: user,
+    });
+  }
+
+  const resetConversation = () => {
+    channelRef.current.trigger("client-widget-message", {
+      channelName: channelId,
+      message: {
+        text: "@InsentBot"
+      },
+      senderId: user,
+    });
+  }
+
   return (
     <>
       <div
@@ -188,13 +210,20 @@ function Conversations({
                 </div>
               </div>
             ) : message.type === "buttons" ? (
-              message.buttons.fields.map((button) => <button>{button}</button>)
+              <div className="flex justify-end space-x-2 mx-2">
+                {message.buttons.fields.map((button) => (
+                  <button style={{
+                    borderColor: color.headerBackgroundColor,
+                  }} className="border bg-gray-200 px-2 py-2 rounded-full" onClick={() => handleButtonClick(message.buttons.key, button)}>{button}</button>
+                ))}
+              </div>
             ) : (
               ""
             )
           )}
+          <div className="mb-2" />
         </div>
-        <div className="flex items-center justify-center hover:text-white mt-4 space-x-2 text-gray-300 font-semibold">
+        <div onClick={resetConversation} className="flex items-center justify-center hover:text-white mt-4 space-x-2 text-gray-300 font-semibold">
           <RiRestartFill />
           Restart Conversation
         </div>
