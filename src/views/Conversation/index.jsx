@@ -4,6 +4,7 @@ import Avatar from "../../components/Avatar";
 import { FiCheck, IoChevronBack, MdSend, RiRestartFill } from "react-icons/all";
 import CloseButton from "../../components/CloseButton";
 import "./styles.css";
+import AllConversation from "../AllConversation";
 
 function Conversations({
   setInitiateSocketConnection,
@@ -112,49 +113,11 @@ function Conversations({
   // show all conversations
   if (showAllConversations) {
     return (
-      <div
-        className="rounded-3xl relative shadow-lg bg-white w-full chat-height border-b-8 border-box overflow-hidden"
-        style={{ borderColor: color.headerBackgroundColor }}
-      >
-        <div
-          className="h-64 w-full scale-125 absolute z-10"
-          style={{ backgroundColor: color.headerBackgroundColor }}
-        />
-        <div
-          className="absolute h-48 w-full z-10 rounded-3xl transform -rotate-12 scale-150"
-          style={{ backgroundColor: color.headerBackgroundColor }}
-        />
-        <div className="p-4 z-50 relative">
-          <Avatar
-            backgroundColor={color.headerBackgroundColor}
-            src={detail.widgetIcon}
-            rounded
-          />
-          <h1 className="font-bold text-2xl text-white">Hi, we're Insent</h1>
-          <p className="text-white text-sm mt-4">
-            We're here to help you accelerate your prospect's <br /> buying
-            experience.
-          </p>
-          <p className="text-white text-sm font-bold mt-4">
-            Your conversations
-          </p>
-          <div
-            className="bg-white flex shadow-lg rounded-3xl space-x-2 p-4 cursor-pointer"
-            onClick={() => setShowAllConversation(false)}
-          >
-            <Avatar
-              backgroundColor={color.headerBackgroundColor}
-              src={detail.widgetIcon}
-              rounded
-            />
-
-            <div>
-              <h3 className="font-bold text-lg">InsentBot</h3>
-              <p className="text-gray-500 text-sm">First Name?</p>
-            </div>
-          </div>
-        </div>
-      </div>
+      <AllConversation
+        color={color}
+        setShowAllConversation={setShowAllConversation}
+        detail={detail}
+      />
     );
   }
 
@@ -279,10 +242,10 @@ function Conversations({
           </div>
           <div className="mb-2" />
         </div>
-        // restart conversation
+        {/*restart conversation*/}
         <div
           onClick={resetConversation}
-          className="flex items-center justify-center hover:text-white mt-4 space-x-2 text-gray-300 font-semibold"
+          className="flex items-center justify-center hover:text-white mt-4 space-x-2 text-gray-300 font-semibold cursor-pointer"
         >
           <RiRestartFill />
           Restart Conversation
