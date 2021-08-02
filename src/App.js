@@ -49,7 +49,7 @@ function App() {
       })
 
       channel.bind("server-message", (data) => {
-        setLastMessageTimestamp(data.lastMessageTimeStamp);
+        // setLastMessageTimestamp(data.lastMessageTimeStamp);
         setConversations(prevState => [...prevState, ...data.messages])
         console.log(data);
       });

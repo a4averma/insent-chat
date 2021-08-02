@@ -25,7 +25,12 @@ export default function Conversations({
       .then((r) => {
         setIsLoading(false);
         setConversations([...r.data.prevMessages, ...r.data.messages]);
-        setLastMessageTimestamp(r.data.messageTimestamp);
+        if (r.data.prevMessages.length) {
+          setLastMessageTimestamp(r.data.prevMessages[r.data.prevMessages.length - 1].time);
+        } else {
+          setLastMessageTimestamp(r.data.messageTimestamp);
+        }
+
         setInitiateSocketConnection(true);
       })
       .catch((err) => {
