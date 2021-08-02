@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import {useEffect, useRef, useState} from "react";
 import { useQuery } from "react-query";
 import ChatService from "./views/service";
 import { setupNetworkConfigurator } from "./utils/Axios";
@@ -7,12 +7,13 @@ import { FaTimes } from "react-icons/fa";
 import Conversation from "./views/Conversation";
 import Pusher from "pusher-js";
 
+
 function App() {
   const [showConversation, setShowConversation] = useState(false);
   const [initiateSocketConnect, setInitiateSocketConnection] = useState(false);
   const [lastMessageTimestamp, setLastMessageTimestamp] = useState(0);
-
   const [conversations, setConversations] = useState([]);
+  const channelRef = useRef({});
 
   const { isLoading, isError, data } = useQuery(`fetch-user`, () => {
     let userId = localStorage.getItem("user-id");
@@ -40,6 +41,7 @@ function App() {
         // }
       });
       const channel = pusher.subscribe(data.subscriptionChannel);
+      channelRef.current = channel;
       channel.bind("pusher:subscription_succeeded", () => {
         channel.trigger("client-widget-message", {
           channelName: data.channelId,
@@ -79,6 +81,7 @@ function App() {
         user={data.user.id}
         conversations={conversations}
         setConversations={setConversations}
+        channelRef={channelRef}
       />
     );
   }

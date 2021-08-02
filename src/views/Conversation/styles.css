@@ -1,3 +1,7 @@
 .chat-height {
   height: calc(100vh - 50px);
 }
+
+.conversation-height {
+  height: calc(100vh - 180px)
+}

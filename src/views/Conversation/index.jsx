@@ -1,22 +1,25 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, forwardRef, useRef } from "react";
 import ConversationService from "./services";
 import Avatar from "../../components/Avatar";
-import { IoChevronBack } from "react-icons/all";
+import { IoChevronBack, MdSend } from "react-icons/all";
 import CloseButton from "../../components/CloseButton";
 import "./styles.css";
 
-export default function Conversations({
+function Conversations({
   setInitiateSocketConnection,
   setLastMessageTimestamp,
   channelId,
   detail,
   color,
   setConversations,
-  conversations
+  conversations,
+  channelRef,
+  user,
 }) {
   const [isLoading, setIsLoading] = useState(false);
   const [isError, setIsError] = useState(false);
   const [showAllConversations, setShowAllConversation] = useState(false);
+  const ref = useRef();
 
   const fetchConversation = () => {
     setIsLoading(true);
@@ -26,11 +29,12 @@ export default function Conversations({
         setIsLoading(false);
         setConversations([...r.data.prevMessages, ...r.data.messages]);
         if (r.data.prevMessages.length) {
-          setLastMessageTimestamp(r.data.prevMessages[r.data.prevMessages.length - 1].time);
+          setLastMessageTimestamp(
+            r.data.prevMessages[r.data.prevMessages.length - 1].time
+          );
         } else {
           setLastMessageTimestamp(r.data.messageTimestamp);
         }
-
         setInitiateSocketConnection(true);
       })
       .catch((err) => {
@@ -94,6 +98,19 @@ export default function Conversations({
     );
   }
 
+  const handleOnSubmit = (e) => {
+    e.preventDefault();
+    channelRef.current.trigger("client-widget-message", {
+      channelName: channelId,
+      message: {
+        lastMessageTimeStamp:
+          conversations[conversations.length - 1].messageTimestamp,
+        [ref.current.name]: ref.current.value,
+      },
+      senderId: user,
+    });
+  };
+
   return (
     <>
       <div className="rounded-3xl shadow-lg w-3/12 chat-height">
@@ -117,24 +134,63 @@ export default function Conversations({
           </div>
           <CloseButton />
         </div>
-        <div className="h-64">
+        <div className="conversation-height overflow-y-auto">
           <div className="px-4 font-bold">{isLoading ? "..." : ""}</div>
-          {conversations.map((message, index) => (
-            <div
-              className="rounded-t-3xl rounded-br-3xl rounded-bl-lg bg-gray-200 text-gray-600 m-4 w-6/12 px-4 py-4"
-              key={message._id || message.id}
-            >
-              {message.text ? (
-                message.text.replace("<br />", "")
-              ) : message.type === "input" ? (
-                <input type="text" placeholder={message.input[0].name} />
-              ) : (
-                message.type === "buttons" ? message.buttons.fields.map(button => <button>{button}</button>) : ''
-              )}
-            </div>
-          ))}
+          {conversations.map((message, index) =>
+            message.text ? (
+              message.userId === user ?
+                <div className="flex justify-end">
+                  <div
+                    style={{
+                      backgroundColor: color.headerBackgroundColor
+                    }}
+                    className="rounded-3xl text-white m-4 w-6/12 px-4 py-4"
+                    key={message._id || message.id}
+                  >
+                    {message.text.replace("<br />", "")}
+                  </div>
+                </div> : <div
+                  className="rounded-t-3xl rounded-br-3xl rounded-bl-lg bg-gray-200 text-gray-600 m-4 w-6/12 px-4 py-4"
+                  key={message._id || message.id}
+                >
+                  {message.text.replace("<br />", "")}
+                </div>
+            ) : message.type === "input" ? (
+              <div
+                className="rounded-3xl bg-gray-200 text-gray-600 m-4 w-8/12 px-4 py-4"
+                key={message._id || message.id}
+              >
+                <div className="bg-white rounded-xl flex items-center space-x-4">
+                  <form onSubmit={handleOnSubmit}>
+                    <input
+                      ref={ref}
+                      name={message.input[0].key}
+                      className="px-2 py-4 rounded-xl focus:border-none"
+                      type={
+                        message.input[0].type === "plain"
+                          ? "text"
+                          : message.input[0].type
+                      }
+                      placeholder={`Enter your ${message.input[0].name.toLowerCase()}`}
+                    />
+                    <button type="submit">
+                      <MdSend color={color.headerBackgroundColor} />
+                    </button>
+                  </form>
+                </div>
+              </div>
+            ) : message.type === "buttons" ? (
+              message.buttons.fields.map((button) => <button>{button}</button>)
+            ) : (
+              ""
+            )
+          )}
         </div>
       </div>
     </>
   );
 }
+
+export default forwardRef((props, ref) => (
+  <Conversations {...props} {...ref} />
+));
