@@ -1,13 +1,14 @@
 import { useEffect, useState, forwardRef, useRef } from "react";
 import ConversationService from "./services";
 import Avatar from "../../components/Avatar";
-import { IoChevronBack, MdSend, RiRestartFill } from "react-icons/all";
+import {FiCheck, IoChevronBack, MdSend, RiRestartFill} from "react-icons/all";
 import CloseButton from "../../components/CloseButton";
 import "./styles.css";
 
 function Conversations({
   setInitiateSocketConnection,
   setLastMessageTimestamp,
+  lastMessageTimestamp,
   channelId,
   detail,
   color,
@@ -15,6 +16,8 @@ function Conversations({
   conversations,
   channelRef,
   user,
+  loadingConversation,
+  setLoadingConversation
 }) {
   const [isLoading, setIsLoading] = useState(false);
   const [isError, setIsError] = useState(false);
@@ -100,6 +103,11 @@ function Conversations({
 
   const handleOnSubmit = (e) => {
     e.preventDefault();
+    setLoadingConversation(true)
+    setConversations(prevState => {
+      prevState[prevState.length - 1].disabled = true;
+      return [...prevState]
+    })
     channelRef.current.trigger("client-widget-message", {
       channelName: channelId,
       message: {
@@ -109,21 +117,23 @@ function Conversations({
       },
       senderId: user,
     });
+    setLastMessageTimestamp(conversations[conversations.length - 1].messageTimestamp)
   };
 
   const handleButtonClick = (key, value) => {
+    setLoadingConversation(true)
     channelRef.current.trigger("client-widget-message", {
       channelName: channelId,
       message: {
-        lastMessageTimeStamp:
-        conversations[conversations.length - 2].time,
-        [key]: value,
+        lastMessageTimeStamp: lastMessageTimestamp,
+        [key]: [value],
       },
       senderId: user,
     });
   }
 
   const resetConversation = () => {
+    setLoadingConversation(true)
     channelRef.current.trigger("client-widget-message", {
       channelName: channelId,
       message: {
@@ -131,6 +141,11 @@ function Conversations({
       },
       senderId: user,
     });
+    channelRef.current.trigger("client-widget-message", {
+      channelName: channelId,
+      message: { lastMessageTimeStamp: conversations[conversations.length - 1].messageTimestamp},
+      senderId: user,
+    })
   }
 
   return (
@@ -195,6 +210,7 @@ function Conversations({
                     <input
                       ref={ref}
                       name={message.input[0].key}
+                      disabled={message.disabled}
                       className="px-2 py-4 rounded-xl focus:border-none"
                       type={
                         message.input[0].type === "plain"
@@ -203,8 +219,8 @@ function Conversations({
                       }
                       placeholder={`Enter your ${message.input[0].name.toLowerCase()}`}
                     />
-                    <button type="submit">
-                      <MdSend color={color.headerBackgroundColor} />
+                    <button type="submit" disabled={message.disabled}>
+                      {message.disabled ? <FiCheck color={color.headerBackgroundColor} /> : <MdSend color={color.headerBackgroundColor} />}
                     </button>
                   </form>
                 </div>
@@ -218,9 +234,19 @@ function Conversations({
                 ))}
               </div>
             ) : (
-              ""
+              message.type === "calendar" ? <div
+                style={{
+                  backgroundColor: color.headerBackgroundColor,
+                }}
+                className="rounded-3xl text-white m-4 w-6/12 px-4 py-4"
+                key={message._id || message.id}
+              >
+                Calendar
+              </div> : ""
+
             )
           )}
+          <div className="px-4 font-bold">{loadingConversation ? "..." : ""}</div>
           <div className="mb-2" />
         </div>
         <div onClick={resetConversation} className="flex items-center justify-center hover:text-white mt-4 space-x-2 text-gray-300 font-semibold">

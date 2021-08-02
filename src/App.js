@@ -14,6 +14,7 @@ function App() {
   const [lastMessageTimestamp, setLastMessageTimestamp] = useState(0);
   const [conversations, setConversations] = useState([]);
   const channelRef = useRef({});
+  const [loadingConversation, setLoadingConversation] = useState(false);
 
   const { isLoading, isError, data } = useQuery(`fetch-user`, () => {
     let userId = localStorage.getItem("user-id");
@@ -34,6 +35,7 @@ function App() {
       let pusher = new Pusher("67bb469433cb732caa7a", {
         authEndpoint: `${process.env.REACT_APP_API}pusher/presence/auth/visitor?userid=${data.user.id}`,
       });
+      setLoadingConversation(true)
       pusher.connection.bind("connected", () => {
         // ChatService.markAsDelivered(data.channelId, { userid: data.user.id });
         // if (showConversation) {
@@ -53,11 +55,7 @@ function App() {
       channel.bind("server-message", (data) => {
         // setLastMessageTimestamp(data.lastMessageTimeStamp);
         setConversations(prevState => [...prevState, ...data.messages])
-        console.log(data);
-      });
-
-      channel.bind("client-widget-message", (data) => {
-        console.log(data);
+        setLoadingConversation(false);
       });
 
     }
@@ -74,6 +72,7 @@ function App() {
     return (
       <Conversation
         setLastMessageTimestamp={setLastMessageTimestamp}
+        lastMessageTimestamp={lastMessageTimestamp}
         setInitiateSocketConnection={setInitiateSocketConnection}
         channelId={data.channelId}
         detail={data.settings.bot}
@@ -82,6 +81,8 @@ function App() {
         conversations={conversations}
         setConversations={setConversations}
         channelRef={channelRef}
+        loadingConversation={loadingConversation}
+        setLoadingConversation={setLoadingConversation}
       />
     );
   }
