@@ -27,21 +27,23 @@ function App() {
     }
     setIsLoading(true);
     setIsError(false);
-    ChatService.getUser().then((r) => {
-      setupNetworkConfigurator(r.data.user.id);
-      setData(r.data)
-      if (!userId) {
-        localStorage.setItem("user-id", r.data.user.id);
-      }
-      setInitiateSocketConnection(r.data.initiateSocketConnection);
-      setIsLoading(false)
-    }).catch(() => {
-      setIsError(true)
-    })
-  }
+    ChatService.getUser()
+      .then((r) => {
+        setupNetworkConfigurator(r.data.user.id);
+        setData(r.data);
+        if (!userId) {
+          localStorage.setItem("user-id", r.data.user.id);
+        }
+        setInitiateSocketConnection(r.data.initiateSocketConnection);
+        setIsLoading(false);
+      })
+      .catch(() => {
+        setIsError(true);
+      });
+  };
 
   useEffect(() => {
-   initData();
+    initData();
     return () => {
       // cleanup
       if (channelRef.current.unsubscribe) {
@@ -135,8 +137,8 @@ function App() {
         src={data.settings.bot.widgetIcon}
       />
     </div>
-    // chat widget
   ) : (
+    // chat widget
     <div
       className="h-16 w-16 cursor-pointer"
       onClick={() => setShowConversation(true)}

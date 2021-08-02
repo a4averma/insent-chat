@@ -19,7 +19,7 @@ function Conversations({
   user,
   loadingConversation,
   setLoadingConversation,
-  setShowConversation,
+  setShowConversation
 }) {
   const [isLoading, setIsLoading] = useState(false);
   const [isError, setIsError] = useState(false);
@@ -103,8 +103,7 @@ function Conversations({
     channelRef.current.trigger("client-widget-message", {
       channelName: channelId,
       message: {
-        lastMessageTimeStamp:
-          conversations[conversations.length - 1].messageTimestamp,
+        lastMessageTimeStamp: lastMessageTimestamp,
       },
       senderId: user,
     });
