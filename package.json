@@ -18,7 +18,7 @@
   },
   "scripts": {
     "start": "cross-env REACT_APP_API=https://insentrecruit.api.insent.ai/ craco start",
-    "build": "cross-env REACT_APP_API=https://insentrecruit.api.insent.ai/ craco build",
+    "build": "cross-env REACT_APP_API=https://insentrecruit.api.insent.ai/ CI=false craco build",
     "test": "craco test",
     "eject": "react-scripts eject"
   },
