@@ -99,6 +99,7 @@ function App() {
         channelRef={channelRef}
         loadingConversation={loadingConversation}
         setLoadingConversation={setLoadingConversation}
+        setShowConversation={setShowConversation}
       />
     );
   }

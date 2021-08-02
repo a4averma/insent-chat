@@ -17,7 +17,8 @@ function Conversations({
   channelRef,
   user,
   loadingConversation,
-  setLoadingConversation
+  setLoadingConversation,
+  setShowConversation
 }) {
   const [isLoading, setIsLoading] = useState(false);
   const [isError, setIsError] = useState(false);
@@ -56,18 +57,18 @@ function Conversations({
   if (showAllConversations) {
     return (
       <div
-        className="rounded-3xl relative shadow-lg w-3/12 chat-height border-b-8 border-box overflow-hidden"
+        className="rounded-3xl relative shadow-lg bg-white w-full chat-height border-b-8 border-box overflow-hidden"
         style={{ borderColor: color.headerBackgroundColor }}
       >
         <div
-          className="h-12 w-full absolute -z-10"
+          className="h-64 w-full scale-125 absolute z-10"
           style={{ backgroundColor: color.headerBackgroundColor }}
         />
         <div
-          className="absolute h-48 w-full -z-10 rounded-3xl transform -rotate-12 scale-125"
+          className="absolute h-48 w-full z-10 rounded-3xl transform -rotate-12 scale-150"
           style={{ backgroundColor: color.headerBackgroundColor }}
         />
-        <div className="p-4">
+        <div className="p-4 z-50 relative">
           <Avatar
             backgroundColor={color.headerBackgroundColor}
             src={detail.widgetIcon}
@@ -154,7 +155,7 @@ function Conversations({
         style={{
           backgroundColor: color.headerBackgroundColor,
         }}
-        className="rounded-3xl shadow-lg w-3/12 chat-height"
+        className="rounded-3xl shadow-lg chat-height w-full"
       >
         <div className="flex bg-white shadow-lg justify-between px-4 py-2">
           <div className="flex items-center space-x-4">
@@ -174,7 +175,7 @@ function Conversations({
               </p>
             </div>
           </div>
-          <CloseButton />
+          <CloseButton onClick={() => setShowConversation(false)} />
         </div>
         <div className="conversation-height bg-white rounded-b-3xl overflow-y-auto">
           <div className="px-4 font-bold">{isLoading ? "..." : ""}</div>
