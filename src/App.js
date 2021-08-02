@@ -7,17 +7,20 @@ import Conversation from "./views/Conversation";
 import Pusher from "pusher-js";
 let userId = localStorage.getItem("user-id");
 function App() {
+  // State related to conversation
   const [showConversation, setShowConversation] = useState(false);
   const [initiateSocketConnect, setInitiateSocketConnection] = useState(false);
   const [lastMessageTimestamp, setLastMessageTimestamp] = useState(0);
   const [conversations, setConversations] = useState([]);
-  const channelRef = useRef({});
   const [loadingConversation, setLoadingConversation] = useState(false);
 
+  // state related to initialising the project
   const [isLoading, setIsLoading] = useState(true);
   const [isError, setIsError] = useState(false);
   const [data, setData] = useState({});
 
+  const channelRef = useRef({});
+  // initialize the project
   const initData = () => {
     if (userId) {
       setupNetworkConfigurator(userId);
@@ -40,6 +43,7 @@ function App() {
   useEffect(() => {
    initData();
     return () => {
+      // cleanup
       if (channelRef.current.unsubscribe) {
         channelRef.current.unsubscribe();
         channelRef.current = {};
@@ -48,6 +52,7 @@ function App() {
   }, []);
 
   useEffect(() => {
+    // initiate socket connection if it is allowed
     if (initiateSocketConnect) {
       let pusher = new Pusher("67bb469433cb732caa7a", {
         authEndpoint: `${process.env.REACT_APP_API}pusher/presence/auth/visitor?userid=${data.user.id}`,
@@ -60,6 +65,7 @@ function App() {
         // }
       });
       const channel = pusher.subscribe(data.subscriptionChannel);
+      // add the channel object as reference
       channelRef.current = channel;
       channel.bind("pusher:subscription_succeeded", () => {
         channel.trigger("client-widget-message", {
@@ -68,7 +74,7 @@ function App() {
           senderId: data.user.id,
         });
       });
-
+      // State change on server message event
       channel.bind("server-message", (data) => {
         // setLastMessageTimestamp(data.lastMessageTimeStamp);
         setConversations((prevState) => [...prevState, ...data.messages]);
@@ -78,12 +84,13 @@ function App() {
   }, [initiateSocketConnect]);
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <div>...</div>;
   }
   if (isError) {
     return <div>Error!</div>;
   }
 
+  // Once conversation is started
   if (showConversation) {
     return (
       <Conversation
@@ -105,6 +112,7 @@ function App() {
   }
 
   return !userId ? (
+    // Expanded Chat Widget
     <div
       className="relative shadow-md flex items-center p-4 space-x-4 border-b-8 w-2/12 rounded-3xl"
       style={{ borderColor: data.settings.color.headerBackgroundColor }}
@@ -127,6 +135,7 @@ function App() {
         src={data.settings.bot.widgetIcon}
       />
     </div>
+    // chat widget
   ) : (
     <div
       className="h-16 w-16 cursor-pointer"

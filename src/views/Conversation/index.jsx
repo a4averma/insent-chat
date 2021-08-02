@@ -1,7 +1,7 @@
 import { useEffect, useState, forwardRef, useRef } from "react";
 import ConversationService from "./services";
 import Avatar from "../../components/Avatar";
-import {FiCheck, IoChevronBack, MdSend, RiRestartFill} from "react-icons/all";
+import { FiCheck, IoChevronBack, MdSend, RiRestartFill } from "react-icons/all";
 import CloseButton from "../../components/CloseButton";
 import "./styles.css";
 
@@ -18,7 +18,7 @@ function Conversations({
   user,
   loadingConversation,
   setLoadingConversation,
-  setShowConversation
+  setShowConversation,
 }) {
   const [isLoading, setIsLoading] = useState(false);
   const [isError, setIsError] = useState(false);
@@ -54,6 +54,62 @@ function Conversations({
     return <div>Error</div>;
   }
 
+  // Handle submission for input type
+  const handleOnSubmit = (e) => {
+    e.preventDefault();
+    setLoadingConversation(true);
+    setConversations((prevState) => {
+      prevState[prevState.length - 1].disabled = true;
+      return [...prevState];
+    });
+    channelRef.current.trigger("client-widget-message", {
+      channelName: channelId,
+      message: {
+        lastMessageTimeStamp:
+          conversations[conversations.length - 1].messageTimestamp,
+        [ref.current.name]: ref.current.value,
+      },
+      senderId: user,
+    });
+    setLastMessageTimestamp(
+      conversations[conversations.length - 1].messageTimestamp
+    );
+  };
+
+  // handle submission for button click
+  const handleButtonClick = (key, value) => {
+    setLoadingConversation(true);
+    channelRef.current.trigger("client-widget-message", {
+      channelName: channelId,
+      message: {
+        lastMessageTimeStamp: lastMessageTimestamp,
+        [key]: [value],
+      },
+      senderId: user,
+    });
+  };
+
+  // handle reset conversation
+  const resetConversation = () => {
+    setLoadingConversation(true);
+    channelRef.current.trigger("client-widget-message", {
+      channelName: channelId,
+      message: {
+        text: "@InsentBot",
+      },
+      senderId: user,
+    });
+    channelRef.current.trigger("client-widget-message", {
+      channelName: channelId,
+      message: {
+        lastMessageTimeStamp:
+          conversations[conversations.length - 1].messageTimestamp,
+      },
+      senderId: user,
+    });
+  };
+
+  // show all conversations
   if (showAllConversations) {
     return (
       <div
@@ -102,53 +158,6 @@ function Conversations({
     );
   }
 
-  const handleOnSubmit = (e) => {
-    e.preventDefault();
-    setLoadingConversation(true)
-    setConversations(prevState => {
-      prevState[prevState.length - 1].disabled = true;
-      return [...prevState]
-    })
-    channelRef.current.trigger("client-widget-message", {
-      channelName: channelId,
-      message: {
-        lastMessageTimeStamp:
-          conversations[conversations.length - 1].messageTimestamp,
-        [ref.current.name]: ref.current.value,
-      },
-      senderId: user,
-    });
-    setLastMessageTimestamp(conversations[conversations.length - 1].messageTimestamp)
-  };
-
-  const handleButtonClick = (key, value) => {
-    setLoadingConversation(true)
-    channelRef.current.trigger("client-widget-message", {
-      channelName: channelId,
-      message: {
-        lastMessageTimeStamp: lastMessageTimestamp,
-        [key]: [value],
-      },
-      senderId: user,
-    });
-  }
-
-  const resetConversation = () => {
-    setLoadingConversation(true)
-    channelRef.current.trigger("client-widget-message", {
-      channelName: channelId,
-      message: {
-        text: "@InsentBot"
-      },
-      senderId: user,
-    });
-    channelRef.current.trigger("client-widget-message", {
-      channelName: channelId,
-      message: { lastMessageTimeStamp: conversations[conversations.length - 1].messageTimestamp},
-      senderId: user,
-    })
-  }
-
   return (
     <>
       <div
@@ -182,6 +191,7 @@ function Conversations({
           {conversations.map((message, index) =>
             message.text ? (
               message.userId === user ? (
+                // message  from client
                 <div className="flex justify-end">
                   <div
                     style={{
@@ -194,6 +204,7 @@ function Conversations({
                   </div>
                 </div>
               ) : (
+                // message from server
                 <div
                   className="rounded-t-3xl rounded-br-3xl rounded-bl-lg bg-gray-200 text-gray-600 m-4 w-6/12 px-4 py-4"
                   key={message._id || message.id}
@@ -202,6 +213,7 @@ function Conversations({
                 </div>
               )
             ) : message.type === "input" ? (
+              // message type input
               <div
                 className="rounded-3xl bg-gray-200 text-gray-600 m-4 w-8/12 px-4 py-4"
                 key={message._id || message.id}
@@ -221,21 +233,35 @@ function Conversations({
                       placeholder={`Enter your ${message.input[0].name.toLowerCase()}`}
                     />
                     <button type="submit" disabled={message.disabled}>
-                      {message.disabled ? <FiCheck color={color.headerBackgroundColor} /> : <MdSend color={color.headerBackgroundColor} />}
+                      {message.disabled ? (
+                        <FiCheck color={color.headerBackgroundColor} />
+                      ) : (
+                        <MdSend color={color.headerBackgroundColor} />
+                      )}
                     </button>
                   </form>
                 </div>
               </div>
             ) : message.type === "buttons" ? (
+              // message type button
               <div className="flex justify-end space-x-2 mx-2">
                 {message.buttons.fields.map((button) => (
-                  <button style={{
-                    borderColor: color.headerBackgroundColor,
-                  }} className="border bg-gray-200 px-2 py-2 rounded-full" onClick={() => handleButtonClick(message.buttons.key, button)}>{button}</button>
+                  <button
+                    style={{
+                      borderColor: color.headerBackgroundColor,
+                    }}
+                    className="border bg-gray-200 px-2 py-2 rounded-full"
+                    onClick={() =>
+                      handleButtonClick(message.buttons.key, button)
+                    }
+                  >
+                    {button}
+                  </button>
                 ))}
               </div>
-            ) : (
-              message.type === "calendar" ? <div
+            ) : message.type === "calendar" ? (
+              // message type calendar
+              <div
                 style={{
                   backgroundColor: color.headerBackgroundColor,
                 }}
@@ -243,14 +269,21 @@ function Conversations({
                 key={message._id || message.id}
               >
                 Calendar
-              </div> : ""
-
+              </div>
+            ) : (
+              ""
             )
           )}
-          <div className="px-4 font-bold">{loadingConversation ? "..." : ""}</div>
+          <div className="px-4 font-bold">
+            {loadingConversation ? "..." : ""}
+          </div>
           <div className="mb-2" />
         </div>
-        <div onClick={resetConversation} className="flex items-center justify-center hover:text-white mt-4 space-x-2 text-gray-300 font-semibold">
+        // restart conversation
+        <div
+          onClick={resetConversation}
+          className="flex items-center justify-center hover:text-white mt-4 space-x-2 text-gray-300 font-semibold"
+        >
           <RiRestartFill />
           Restart Conversation
         </div>
