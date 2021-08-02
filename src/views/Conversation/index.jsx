@@ -1,7 +1,7 @@
 import { useEffect, useState, forwardRef, useRef } from "react";
 import ConversationService from "./services";
 import Avatar from "../../components/Avatar";
-import { IoChevronBack, MdSend } from "react-icons/all";
+import {IoChevronBack, MdSend, RiRestartFill} from "react-icons/all";
 import CloseButton from "../../components/CloseButton";
 import "./styles.css";
 
@@ -113,8 +113,13 @@ function Conversations({
 
   return (
     <>
-      <div className="rounded-3xl shadow-lg w-3/12 chat-height">
-        <div className="flex shadow-lg justify-between px-4 py-2">
+      <div
+        style={{
+          backgroundColor: color.headerBackgroundColor,
+        }}
+        className="rounded-3xl shadow-lg w-3/12 chat-height"
+      >
+        <div className="flex bg-white shadow-lg justify-between px-4 py-2">
           <div className="flex items-center space-x-4">
             <IoChevronBack
               className="cursor-pointer"
@@ -134,27 +139,30 @@ function Conversations({
           </div>
           <CloseButton />
         </div>
-        <div className="conversation-height overflow-y-auto">
+        <div className="conversation-height bg-white rounded-b-3xl overflow-y-auto">
           <div className="px-4 font-bold">{isLoading ? "..." : ""}</div>
           {conversations.map((message, index) =>
             message.text ? (
-              message.userId === user ?
+              message.userId === user ? (
                 <div className="flex justify-end">
                   <div
                     style={{
-                      backgroundColor: color.headerBackgroundColor
+                      backgroundColor: color.headerBackgroundColor,
                     }}
                     className="rounded-3xl text-white m-4 w-6/12 px-4 py-4"
                     key={message._id || message.id}
                   >
                     {message.text.replace("<br />", "")}
                   </div>
-                </div> : <div
+                </div>
+              ) : (
+                <div
                   className="rounded-t-3xl rounded-br-3xl rounded-bl-lg bg-gray-200 text-gray-600 m-4 w-6/12 px-4 py-4"
                   key={message._id || message.id}
                 >
                   {message.text.replace("<br />", "")}
                 </div>
+              )
             ) : message.type === "input" ? (
               <div
                 className="rounded-3xl bg-gray-200 text-gray-600 m-4 w-8/12 px-4 py-4"
@@ -185,6 +193,10 @@ function Conversations({
               ""
             )
           )}
+        </div>
+        <div className="flex items-center justify-center hover:text-white mt-4 space-x-2 text-gray-300 font-semibold">
+          <RiRestartFill />
+          Restart Conversation
         </div>
       </div>
     </>
