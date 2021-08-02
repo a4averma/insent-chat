@@ -1,13 +1,11 @@
-import {useEffect, useRef, useState} from "react";
-import { useQuery } from "react-query";
+import { useEffect, useRef, useState } from "react";
 import ChatService from "./views/service";
 import { setupNetworkConfigurator } from "./utils/Axios";
 import Avatar from "./components/Avatar";
 import { FaTimes } from "react-icons/fa";
 import Conversation from "./views/Conversation";
 import Pusher from "pusher-js";
-
-
+let userId = localStorage.getItem("user-id");
 function App() {
   const [showConversation, setShowConversation] = useState(false);
   const [initiateSocketConnect, setInitiateSocketConnection] = useState(false);
@@ -16,26 +14,45 @@ function App() {
   const channelRef = useRef({});
   const [loadingConversation, setLoadingConversation] = useState(false);
 
-  const { isLoading, isError, data } = useQuery(`fetch-user`, () => {
-    let userId = localStorage.getItem("user-id");
+  const [isLoading, setIsLoading] = useState(true);
+  const [isError, setIsError] = useState(false);
+  const [data, setData] = useState({});
+
+  const initData = () => {
     if (userId) {
       setupNetworkConfigurator(userId);
     }
-    return ChatService.getUser().then((r) => {
+    setIsLoading(true);
+    setIsError(false);
+    ChatService.getUser().then((r) => {
+      setupNetworkConfigurator(r.data.user.id);
+      setData(r.data)
       if (!userId) {
         localStorage.setItem("user-id", r.data.user.id);
       }
       setInitiateSocketConnection(r.data.initiateSocketConnection);
-      return r.data;
-    });
-  });
+      setIsLoading(false)
+    }).catch(() => {
+      setIsError(true)
+    })
+  }
+
+  useEffect(() => {
+   initData();
+    return () => {
+      if (channelRef.current.unsubscribe) {
+        channelRef.current.unsubscribe();
+        channelRef.current = {};
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (initiateSocketConnect) {
       let pusher = new Pusher("67bb469433cb732caa7a", {
         authEndpoint: `${process.env.REACT_APP_API}pusher/presence/auth/visitor?userid=${data.user.id}`,
       });
-      setLoadingConversation(true)
+      setLoadingConversation(true);
       pusher.connection.bind("connected", () => {
         // ChatService.markAsDelivered(data.channelId, { userid: data.user.id });
         // if (showConversation) {
@@ -49,15 +66,14 @@ function App() {
           channelName: data.channelId,
           message: { lastMessageTimeStamp: lastMessageTimestamp },
           senderId: data.user.id,
-        })
-      })
+        });
+      });
 
       channel.bind("server-message", (data) => {
         // setLastMessageTimestamp(data.lastMessageTimeStamp);
-        setConversations(prevState => [...prevState, ...data.messages])
+        setConversations((prevState) => [...prevState, ...data.messages]);
         setLoadingConversation(false);
       });
-
     }
   }, [initiateSocketConnect]);
 
@@ -87,10 +103,11 @@ function App() {
     );
   }
 
-  return !data.user.id ? (
+  return !userId ? (
     <div
       className="relative shadow-md flex items-center p-4 space-x-4 border-b-8 w-2/12 rounded-3xl"
       style={{ borderColor: data.settings.color.headerBackgroundColor }}
+      onClick={() => setShowConversation(true)}
     >
       <div
         className="rounded-full bg-gray-300 p-1 absolute right-0 top-0 cursor-pointer"
@@ -110,7 +127,10 @@ function App() {
       />
     </div>
   ) : (
-    <div className="h-16 w-16 cursor-pointer" onClick={() => setShowConversation(true)}>
+    <div
+      className="h-16 w-16 cursor-pointer"
+      onClick={() => setShowConversation(true)}
+    >
       <Avatar
         backgroundColor={data.settings.color.headerBackgroundColor}
         src={data.settings.bot.widgetIcon}
